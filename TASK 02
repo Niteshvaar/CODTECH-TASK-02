@@ -1,0 +1,99 @@
+!pip install pyttsx3
+!pip install gtts
+!pip install playsound
+!pip install langdetect
+import pyttsx3
+from gtts import gTTS
+import os
+from playsound import playsound
+from langdetect import detect
+
+def text_to_speech_gtts(text, language):
+    """Generate speech using Google Text-to-Speech (gTTS)."""
+    try:
+        tts = gTTS(text=text, lang=language, slow=False)
+        output_file = "output_audio.mp3"
+        tts.save(output_file)
+        print(f"Audio saved as {output_file}. Playing now...")
+        playsound(output_file)
+        os.remove(output_file)  # Clean up after playback
+    except Exception as e:
+        print("Error generating speech with gTTS:", e)
+
+
+def text_to_speech_pyttsx3(text, voice_id=None, rate=200):
+    """Generate speech using pyttsx3 (offline)."""
+    try:
+        engine = pyttsx3.init()
+        voices = engine.getProperty('voices')
+
+        if voice_id is not None:
+            engine.setProperty('voice', voice_id)
+
+        engine.setProperty('rate', rate)  # Set speech rate
+        print("Generating audio...")
+        engine.say(text)
+        engine.runAndWait()
+    except Exception as e:
+        print("Error generating speech with pyttsx3:", e)
+
+
+def list_pyttsx3_voices():
+    """List available voices in pyttsx3."""
+    engine = pyttsx3.init()
+    voices = engine.getProperty('voices')
+    print("Available Voices:")
+    for i, voice in enumerate(voices):
+        print(f"{i}: {voice.name} ({voice.languages})")
+    return voices
+
+
+def detect_language(text):
+    """Detect the language of the input text."""
+    try:
+        lang = detect(text)
+        print(f"Detected Language: {lang}")
+        return lang
+    except Exception as e:
+        print("Error detecting language:", e)
+        return "en"  # Default to English
+
+
+def main():
+    print("Welcome to the Text-to-Speech Converter!")
+    print("Choose an option for speech synthesis:")
+    print("1. Online (gTTS - Google Text-to-Speech)")
+    print("2. Offline (pyttsx3)")
+    choice = input("Enter your choice (1/2): ")
+
+    # Get user input text
+    text = input("\nEnter the text to convert to speech: ")
+
+    # Detect language of the input text
+    detected_language = detect_language(text)
+
+    if choice == "1":
+        print("\nUsing Google Text-to-Speech (gTTS).")
+        print(f"Detected Language: {detected_language}")
+        custom_lang = input("Enter language code or press Enter to use detected language: ")
+        language = custom_lang if custom_lang else detected_language
+        text_to_speech_gtts(text, language)
+    elif choice == "2":
+        print("\nUsing pyttsx3 (Offline Text-to-Speech).")
+        voices = list_pyttsx3_voices()
+        voice_choice = input("\nEnter the number of the voice you'd like to use (or press Enter to skip): ")
+        if voice_choice.isdigit():
+            voice_id = voices[int(voice_choice)].id
+        else:
+            voice_id = None
+        rate = input("Enter speech rate (default 200): ")
+        rate = int(rate) if rate.isdigit() else 200
+        text_to_speech_pyttsx3(text, voice_id, rate)
+    else:
+        print("Invalid choice. Exiting the program.")
+
+if __name__ == "__main__":
+    main()
+
+
+
